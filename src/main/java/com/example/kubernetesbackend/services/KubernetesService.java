@@ -1,18 +1,20 @@
 package com.example.kubernetesbackend.services;
 
+import io.kubernetes.client.custom.V1Patch;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.kubernetes.client.openapi.models.V1Deployment;
-import io.kubernetes.client.openapi.models.V1DeploymentList;
-import io.kubernetes.client.openapi.models.V1Namespace;
-import io.kubernetes.client.openapi.models.V1NamespaceList;
+import io.kubernetes.client.openapi.models.*;
+import io.kubernetes.client.proto.V1;
 import io.kubernetes.client.util.ClientBuilder;
 import io.kubernetes.client.util.KubeConfig;
+import io.kubernetes.client.util.PatchUtils;
 import org.springframework.stereotype.Service;
 
+import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +22,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import io.kubernetes.client.openapi.apis.AppsV1Api;
+
 
 
 @Service
@@ -62,11 +65,12 @@ public class KubernetesService {
                 }
             });
 
-        } catch ( ApiException e) {
+        } catch (ApiException e) {
             e.printStackTrace();
         }
         return releases;
     }
+
     public List<String> getHelmReleasesByNamespaces(String namespace) {
         List<String> releases = new ArrayList<>();
         try {
@@ -83,9 +87,8 @@ public class KubernetesService {
                     String status = deployment.getStatus().getConditions().get(0).getType();
                     String chart = deployment.getApiVersion();
                     String appVersion = deployment.getMetadata().getResourceVersion();
-                    releases.add("name: "+releaseName+" namespace: "+namespace+"  revision: "+revision+
-                            " updated: "+updated+" status: "+status+" chart: "+chart+" appVersion: "+appVersion);
-
+                    releases.add("name: " + releaseName + " namespace: " + namespace + "  revision: " + revision +
+                            " updated: " + updated + " status: " + status + " chart: " + chart + " appVersion: " + appVersion);
 
 
                 }
@@ -100,15 +103,23 @@ public class KubernetesService {
 
     public void restartDeployment(String deploymentName, String namespace) {
         try {
+            // Create an instance of the Kubernetes client
             AppsV1Api api = new AppsV1Api(apiClient);
+
+            // Get the current deployment
             V1Deployment deployment = api.readNamespacedDeployment(deploymentName, namespace, null);
-            deployment.getMetadata().setAnnotations(null);
-            deployment.getSpec().getTemplate().getMetadata().setAnnotations(null);
+
+            // Add or update an annotation to trigger a restart
+            V1DeploymentSpec spec = deployment.getSpec();
+            spec.getTemplate().getMetadata().putAnnotationsItem("kubectl.kubernetes.io/restartedAt", String.valueOf(System.currentTimeMillis()));
+
+            // Update the deployment to apply the changes
             api.replaceNamespacedDeployment(deploymentName, namespace, deployment, null, null, null, null);
+
+            System.out.println("Deployment restarted successfully.");
         } catch (ApiException e) {
             e.printStackTrace();
         }
     }
-
 }
 

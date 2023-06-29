@@ -1,6 +1,7 @@
 package com.example.kubernetesbackend.controllers;
 
 import com.example.kubernetesbackend.services.KubernetesService;
+import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.models.V1Deployment;
 import io.kubernetes.client.openapi.models.V1Namespace;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +37,18 @@ public class KubernetesController {
         List<String> releases = kubernetesService.getHelmReleasesByNamespaces(namespace);
         return new ResponseEntity<>(releases, HttpStatus.OK);
     }
-
+/*
+    @PostMapping("/{namespace}/{deploymentName}/restart")
+    public ResponseEntity<String> restartDeployment(@PathVariable String namespace, @PathVariable String deploymentName) {
+        try {
+            kubernetesService.restartDeployment(deploymentName, namespace);
+            return ResponseEntity.ok("Deployment restarted successfully.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to restart deployment.");
+        }
+    }
+*/
     @PostMapping("/{namespace}/{deploymentName}/restart")
     public ResponseEntity<String> restartDeployment(@PathVariable String namespace, @PathVariable String deploymentName) {
         try {
