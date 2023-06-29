@@ -98,5 +98,17 @@ public class KubernetesService {
         return releases;
     }
 
+    public void restartDeployment(String deploymentName, String namespace) {
+        try {
+            AppsV1Api api = new AppsV1Api(apiClient);
+            V1Deployment deployment = api.readNamespacedDeployment(deploymentName, namespace, null);
+            deployment.getMetadata().setAnnotations(null);
+            deployment.getSpec().getTemplate().getMetadata().setAnnotations(null);
+            api.replaceNamespacedDeployment(deploymentName, namespace, deployment, null, null, null, null);
+        } catch (ApiException e) {
+            e.printStackTrace();
+        }
+    }
+
 }
 
