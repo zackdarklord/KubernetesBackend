@@ -72,9 +72,7 @@ public class KubernetesService {
         try {
             AppsV1Api api = new AppsV1Api(apiClient);
             V1DeploymentList deploymentList = api.listDeploymentForAllNamespaces(null, null, null, null, null, null, null, null, null, null);
-            releases.add(String.format("%-15s %-15s %-15s %-40s %-15s %-15s",
-                    "NAME", "NAMESPACE", "REVISION", "UPDATED", "STATUS", "CHART"));
-            releases.add("APP VERSION");
+
             deploymentList.getItems().forEach(deployment -> {
                 Map<String, String> annotations = deployment.getMetadata().getAnnotations();
                 if (annotations != null && annotations.containsKey("meta.helm.sh/release-name") && deployment.getMetadata().getNamespace().equals(namespace)) {
@@ -85,12 +83,11 @@ public class KubernetesService {
                     String status = deployment.getStatus().getConditions().get(0).getType();
                     String chart = deployment.getApiVersion();
                     String appVersion = deployment.getMetadata().getResourceVersion();
-                    String releaseInfo = String.format("%-15s %-15s %-15s %-40s %-15s %-15s",
-                            releaseName, namespacee, revision, updated, status, chart);
-                    releases.add(releaseInfo);
-                    releases.add(appVersion);
+                    releases.add("name: "+releaseName+" namespace: "+namespace+"  revision: "+revision+
+                            " updated: "+updated+" status: "+status+" chart: "+chart+" appVersion: "+appVersion);
 
-                    System.out.println(annotations);
+
+
                 }
             });
         } catch (ApiException e) {
