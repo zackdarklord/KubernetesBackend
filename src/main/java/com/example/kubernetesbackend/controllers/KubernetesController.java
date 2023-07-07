@@ -1,9 +1,10 @@
 package com.example.kubernetesbackend.controllers;
 
+import com.example.kubernetesbackend.entities.DepInfo;
+import com.example.kubernetesbackend.entities.PodInfo;
 import com.example.kubernetesbackend.services.KubernetesService;
 import io.kubernetes.client.openapi.ApiException;
-import io.kubernetes.client.openapi.models.V1Deployment;
-import io.kubernetes.client.openapi.models.V1Namespace;
+import io.kubernetes.client.openapi.models.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -58,5 +59,15 @@ public class KubernetesController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to restart deployment.");
         }
+    }
+
+    @GetMapping("/pods")
+    public List<PodInfo> getAllPods()
+    {
+        return kubernetesService.getAllPods();
+    }
+    @GetMapping("/deployments")
+    public List<DepInfo> getAllDeployments(){
+        return kubernetesService.getAllDeployments();
     }
 }

@@ -1,5 +1,7 @@
 package com.example.kubernetesbackend.services;
 
+import com.example.kubernetesbackend.entities.DepInfo;
+import com.example.kubernetesbackend.entities.PodInfo;
 import io.kubernetes.client.custom.V1Patch;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
@@ -69,6 +71,48 @@ public class KubernetesService {
             e.printStackTrace();
         }
         return releases;
+    }
+    public List<PodInfo> getAllPods() {
+        List<PodInfo> podInfos = new ArrayList<>();
+
+        try {
+            CoreV1Api api = new CoreV1Api(apiClient);
+            V1PodList podList = api.listPodForAllNamespaces(null, null, null, null, null, null, null, null, null, null);
+
+            for (V1Pod pod : podList.getItems()) {
+                String podName = pod.getMetadata().getName();
+                String namespace = pod.getMetadata().getNamespace();
+                List<V1PodCondition> state = pod.getStatus().getConditions(); // Determine the state of the pod
+
+                PodInfo podInfo = new PodInfo(podName, namespace, state);
+                podInfos.add(podInfo);
+            }
+        } catch (ApiException e) {
+            e.printStackTrace();
+        }
+
+        return podInfos;
+    }
+    public List<DepInfo> getAllDeployments() {
+        List<DepInfo> depInfos = new ArrayList<>();
+
+        try {
+            AppsV1Api api = new AppsV1Api(apiClient);
+            V1DeploymentList deplist = api.listDeploymentForAllNamespaces(null, null, null, null, null, null, null, null, null, null);
+
+            for (V1Deployment dep : deplist.getItems()) {
+                String depname = dep.getMetadata().getName();
+                String namespace = dep.getMetadata().getNamespace();
+                List<V1DeploymentCondition> state = dep.getStatus().getConditions(); // Determine the state of the pod
+
+                DepInfo depInfo = new DepInfo(depname, namespace, state);
+                depInfos.add(depInfo);
+            }
+        } catch (ApiException e) {
+            e.printStackTrace();
+        }
+
+        return depInfos;
     }
 
     public List<String> getHelmReleasesByNamespaces(String namespace) {
